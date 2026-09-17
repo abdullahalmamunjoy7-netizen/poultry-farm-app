@@ -27,20 +27,14 @@ jobs:
       - name: Prepare Android Platform
         run: |
           mkdir -p lib
-          # যদি ভুলবশত main.dart বাইরে থাকে, তবে তা lib ফোল্ডারে নিয়ে আসবে
+          # যদি main.dart বাইরে থাকে, তবে lib ফোল্ডারে নিবে
           if [ -f main.dart ]; then
             mv main.dart lib/main.dart
           fi
-          # main.dart ব্যাকআপ নেওয়া
-          if [ -f lib/main.dart ]; then
-            cp lib/main.dart lib/main_temp.dart
-          fi
-          # হাইফেন সমস্যা সমাধান করে অ্যান্ড্রয়েড ফাইল তৈরি করা
-          flutter create . --project-name poultry_manager --platforms=android --org com.poultry.manager
-          # মূল কোড ফিরিয়ে আনা
-          if [ -f lib/main_temp.dart ]; then
-            mv lib/main_temp.dart lib/main.dart
-          fi
+          # অ্যান্ড্রয়েড ফাইলগুলো তৈরি করা
+          flutter create . --project-name poultry_manager --platforms=android --org com.poultry.manager --no-pub
+          # আপনার আসল কোডটি নিশ্চিতভাবে ফিরিয়ে আনা
+          git checkout HEAD -- lib/main.dart || true
 
       - name: Install Dependencies
         run: flutter pub get

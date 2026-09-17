@@ -8,12 +8,11 @@ void main() {
   runApp(const SmartKhamariApp());
 }
 
-// Brand Color Palette extracted from Logo
 class AgroTheme {
-  static const Color primaryGreen = Color(0xFF186337);    // লোগোর মূল গাঢ় সবুজ
-  static const Color accentGreen = Color(0xFF76AB33);     // লোগোর লাইম গ্রিন
-  static const Color darkCharcoal = Color(0xFF1E221E);    // লোগোর গিয়ার ও টেক্সট
-  static const Color background = Color(0xFFF7F9F6);      // সফট অফ-হোয়াইট
+  static const Color primaryGreen = Color(0xFF186337);
+  static const Color accentGreen = Color(0xFF76AB33);
+  static const Color darkCharcoal = Color(0xFF1E221E);
+  static const Color background = Color(0xFFF7F9F6);
   static const Color cardSurface = Colors.white;
   static const Color subtleBorder = Color(0xFFE2E8E0);
 }
@@ -24,7 +23,7 @@ class SmartKhamariApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'স্মার্ট খামারি - Engineer\'s Agro',
+      title: 'স্মার্ট খামারি',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: AgroTheme.background,
@@ -41,7 +40,7 @@ class SmartKhamariApp extends StatelessWidget {
   }
 }
 
-// Vaccine Model
+// Vaccine Schedule Model
 class VaccineInfo {
   final int day;
   final String name;
@@ -195,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Shed> sheds = [];
   double? currentTemp;
   int? currentHumidity;
-  String weatherAdvice = 'আবহাওয়া বিশ্লেষণ করা হচ্ছে...';
+  String weatherAdvice = 'আবহাওয়া তথ্য লোড হচ্ছে...';
   String selectedCity = 'ঢাকা';
 
   final Map<String, List<double>> cities = {
@@ -229,13 +228,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
         String advice = '';
         if (temp >= 32) {
-          advice = '🔥 তীব্র গরম ($temp°C)! দুপুর ১২টা-বিকাল ৪টা শক্ত খাবার বন্ধ রাখুন। ঠাণ্ডা পানিতে স্যালাইন/ভিটামিন-সি দিন।';
+          advice = '🔥 অতিরিক্ত গরম ($temp°C)! দুপুর ১২টা-বিকেল ৪টা খাবার বন্ধ রাখুন। পানিতে স্যালাইন/ভিটামিন-সি মিশিয়ে দিন।';
         } else if (temp <= 20) {
-          advice = '❄️ ঠাণ্ডা আবহাওয়া ($temp°C)! ব্রুডারে পর্যাপ্ত তাপ দিন ও পর্দা নামিয়ে রাখুন। ভিটামিন AD3E দিতে পারেন।';
+          advice = '❄️ ঠাণ্ডা আবহাওয়া ($temp°C)! ব্রুডারে পর্যাপ্ত তাপ দিন ও পর্দা নামান। পানিতে ভিটামিন AD3E দিন।';
         } else if (hum >= 80) {
-          advice = '🌧️ স্যাঁতসেঁতে আবহাওয়া (আর্দ্রতা $hum%)! লিটার ভিজলে উল্টে চুন দিন। কক্সিডিওসিস থেকে সাবধান থাকুন।';
+          advice = '🌧️ আর্দ্র আবহাওয়া ($hum%)! লিটার স্যাঁতসেঁতে হলে চুন ছিটান। কক্সিডিওসিস থেকে সাবধান থাকুন।';
         } else {
-          advice = '🌤️ অনুকূল আবহাওয়া ($temp°C, আর্দ্রতা $hum%)। রুটিনমাফিক পুষ্টিকর খাবার ও বিশুদ্ধ পানি দিন।';
+          advice = '🌤️ সুন্দর আবহাওয়া ($temp°C, আর্দ্রতা $hum%)। নিয়মিত খাদ্য ও পরিষ্কার পানি দিন।';
         }
 
         setState(() {
@@ -324,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   controller: priceCtrl,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                    labelText: 'প্রতি বাচ্চার ক্রয়মূল্য (টাকা)',
+                    labelText: 'প্রতি বাচ্চার দর (টাকা)',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -353,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         Navigator.pop(ctx);
                       }
                     },
-                    child: const Text('ব্যাচ তৈরি করুন', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: const Text('ব্যাচ শুরু করুন', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
               ],
@@ -368,36 +367,42 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AgroTheme.primaryGreen,
-        elevation: 0,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        title: Row(
           children: [
-            const Text('স্মার্ট খামারি', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
-            Text('A Product of Engineer\'s Agro', style: TextStyle(fontSize: 11, color: AgroTheme.accentGreen.withOpacity(0.9))),
-          ],
-        ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 14),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
+            // Display uploaded Logo if available, otherwise icon fallback
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/logo.png',
+                height: 38,
+                width: 38,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AgroTheme.primaryGreen.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.agriculture, color: AgroTheme.primaryGreen, size: 24),
+                ),
+              ),
             ),
-            child: const Row(
+            const SizedBox(width: 10),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.verified, color: AgroTheme.accentGreen, size: 16),
-                SizedBox(width: 4),
-                Text('অফলাইন মোড', style: TextStyle(color: Colors.white, fontSize: 11)),
+                const Text('স্মার্ট খামারি', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AgroTheme.darkCharcoal)),
+                Text('A Product of Engineer\'s Agro', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AgroTheme.primaryGreen.withOpacity(0.85))),
               ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       body: Column(
         children: [
-          // Live Weather Card
+          // Live Weather Advisory Card
           Container(
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
             padding: const EdgeInsets.all(14),
@@ -406,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AgroTheme.subtleBorder),
               boxShadow: [
-                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
+                BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 3)),
               ],
             ),
             child: Column(
@@ -423,7 +428,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: const Icon(Icons.wb_sunny_outlined, color: AgroTheme.primaryGreen, size: 18),
                         ),
                         const SizedBox(width: 8),
-                        const Text('লাইভ আবহাওয়া পরামর্শ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AgroTheme.darkCharcoal)),
+                        const Text('লাইভ আবহাওয়া ও পরামর্শ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AgroTheme.darkCharcoal)),
                       ],
                     ),
                     DropdownButton<String>(
@@ -457,12 +462,12 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text('আমার খামার শেডসমূহ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AgroTheme.darkCharcoal)),
-                Text('${sheds.length} টি ব্যাচ', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+                Text('${sheds.length} টি শেড', style: const TextStyle(color: Colors.grey, fontSize: 13)),
               ],
             ),
           ),
 
-          // List of Sheds
+          // Sheds List
           Expanded(
             child: sheds.isEmpty
                 ? Center(
@@ -473,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 10),
                         const Text('কোনো শেড যুক্ত করা নেই!', style: TextStyle(color: Colors.black54, fontSize: 15, fontWeight: FontWeight.w500)),
                         const SizedBox(height: 4),
-                        const Text('নিচের বাটনে চাপ দিয়ে নতুন ব্যাচের হিসাব শুরু করুন', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                        const Text('নিচের (+) বাটনে চাপ দিয়ে ব্যাচ খুলুন', style: TextStyle(color: Colors.grey, fontSize: 12)),
                       ],
                     ),
                   )
@@ -508,7 +513,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               Text('${s.birdType}  •  বাচ্চা: ${s.chickCount} টি', style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
                               const SizedBox(height: 2),
                               Text(
-                                s.isClosed ? 'ব্যাচ সমাপ্ত' : 'বর্তমান বয়স: $age দিন',
+                                s.isClosed ? 'ব্যাচ সম্পন্ন' : 'বর্তমান বয়স: $age দিন',
                                 style: TextStyle(color: s.isClosed ? Colors.grey : AgroTheme.accentGreen, fontWeight: FontWeight.w600, fontSize: 12),
                               ),
                             ],
@@ -526,7 +531,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
           ),
 
-          // Developer Credit Badge at Bottom
+          // Footer Credit
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -536,14 +541,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Column(
               children: [
-                const Text(
-                  'Developed by Abdullah Al Mamun',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AgroTheme.darkCharcoal),
-                ),
-                Text(
-                  'A Product of Engineer\'s Agro',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AgroTheme.primaryGreen.withOpacity(0.9)),
-                ),
+                const Text('Developed by Abdullah Al Mamun', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AgroTheme.darkCharcoal)),
+                Text('A Product of Engineer\'s Agro', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AgroTheme.primaryGreen)),
               ],
             ),
           ),
@@ -660,7 +659,7 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
                   TextField(controller: eggsCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'ডিম সংগ্রহ (টি)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                 ],
                 const SizedBox(height: 10),
-                TextField(controller: otherCostCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'অন্যান্য খরচ (বিদ্যুৎ, তুষ ইত্যাদি)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
+                TextField(controller: otherCostCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'অন্যান্য খরচ (টাকা)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                 const SizedBox(height: 10),
                 TextField(controller: noteCtrl, decoration: InputDecoration(labelText: 'খরচের নোট / বিবরণ', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
                 const SizedBox(height: 18),
@@ -711,8 +710,8 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(controller: birdsCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'মোট জীবিত বিক্রি (টি)')),
-            TextField(controller: weightCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'মোট ওজন (কেজি)')),
-            TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'প্রতি কেজি দর (টাকা)')),
+            TextField(controller: weightCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'মোট বিক্রিত ওজন (কেজি)')),
+            TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'প্রতি কেজি বিক্রয়মূল্য (টাকা)')),
           ],
         ),
         actions: [
@@ -742,7 +741,6 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
     final schedules = getVaccineSchedule(widget.shed.birdType);
     final todayVaccines = schedules.where((v) => (v.day - currentAge).abs() <= 1).toList();
 
-    // Calculations
     final totalDead = logs.fold<int>(0, (sum, item) => sum + item.mortality);
     final totalFeedKg = logs.fold<double>(0, (sum, item) => sum + item.feedKg);
     final totalFeedCost = logs.fold<double>(0, (sum, item) => sum + item.feedCost);
@@ -772,7 +770,7 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           tabs: const [
-            Tab(text: 'দৈনিক এন্ট্রি'),
+            Tab(text: 'দৈনিক হিসাব'),
             Tab(text: 'ভ্যাকসিন চার্ট'),
             Tab(text: 'লাভ ও রিপোর্ট'),
           ],

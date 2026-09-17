@@ -24,20 +24,29 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Prepare Android Platform
+      - name: Prepare Assets & Platform
         run: |
-          mkdir -p lib
-          # যদি main.dart বাইরে থাকে, তবে lib ফোল্ডারে নিবে
+          mkdir -p lib assets
+          # যদি লোগো মূল ফোল্ডারে থাকে, assets এ নিয়ে যাওয়া
+          if [ -f logo.png ]; then
+            mv logo.png assets/logo.png
+          fi
           if [ -f main.dart ]; then
             mv main.dart lib/main.dart
           fi
-          # অ্যান্ড্রয়েড ফাইলগুলো তৈরি করা
-          flutter create . --project-name poultry_manager --platforms=android --org com.poultry.manager --no-pub
-          # আপনার আসল কোডটি নিশ্চিতভাবে ফিরিয়ে আনা
+          flutter create . --project-name smart_khamari --platforms=android --org com.engineersagro.smartkhamari --no-pub
           git checkout HEAD -- lib/main.dart || true
+          # মোবাইলে অ্যাপের নাম 'স্মার্ট খামারি' সেট করা
+          sed -i 's/android:label=".*"/android:label="স্মার্ট খামারি"/g' android/app/src/main/AndroidManifest.xml
 
       - name: Install Dependencies
         run: flutter pub get
+
+      - name: Generate App Icon from Logo
+        run: |
+          if [ -f assets/logo.png ]; then
+            dart run flutter_launcher_icons
+          fi
 
       - name: Build Debug APK
         run: flutter build apk --debug
@@ -45,5 +54,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: poultry-farm-app-apk
+          name: smart-khamari-apk
           path: build/app/outputs/flutter-apk/app-debug.apk

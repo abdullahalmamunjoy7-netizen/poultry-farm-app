@@ -13,7 +13,6 @@ class AgroTheme {
   static const Color accentGreen = Color(0xFF76AB33);
   static const Color darkCharcoal = Color(0xFF1E221E);
   static const Color background = Color(0xFFF7F9F6);
-  static const Color cardSurface = Colors.white;
   static const Color subtleBorder = Color(0xFFE2E8E0);
 }
 
@@ -40,7 +39,6 @@ class SmartKhamariApp extends StatelessWidget {
   }
 }
 
-// Vaccine Schedule Model
 class VaccineInfo {
   final int day;
   final String name;
@@ -77,7 +75,6 @@ List<VaccineInfo> getVaccineSchedule(String birdType) {
   }
 }
 
-// Models
 class Shed {
   String id;
   String name;
@@ -182,7 +179,6 @@ class DailyLog {
   );
 }
 
-// Home Screen
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -228,13 +224,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
         String advice = '';
         if (temp >= 32) {
-          advice = '🔥 অতিরিক্ত গরম ($temp°C)! দুপুর ১২টা-বিকেল ৪টা খাবার বন্ধ রাখুন। পানিতে স্যালাইন/ভিটামিন-সি মিশিয়ে দিন।';
+          advice = '🔥 অতিরিক্ত গরম ($temp°C)! দুপুর ১২টা-বিকেল ৪টা খাবার বন্ধ রাখুন। পানিতে স্যালাইন/ভিটামিন-সি দিন।';
         } else if (temp <= 20) {
-          advice = '❄️ ঠাণ্ডা আবহাওয়া ($temp°C)! ব্রুডারে পর্যাপ্ত তাপ দিন ও পর্দা নামান। পানিতে ভিটামিন AD3E দিন।';
+          advice = '❄️ ঠাণ্ডা আবহাওয়া ($temp°C)! ব্রুডারে পর্যাপ্ত তাপ দিন ও পর্দা নামান।';
         } else if (hum >= 80) {
-          advice = '🌧️ আর্দ্র আবহাওয়া ($hum%)! লিটার স্যাঁতসেঁতে হলে চুন ছিটান। কক্সিডিওসিস থেকে সাবধান থাকুন।';
+          advice = '🌧️ আর্দ্র আবহাওয়া ($hum%)! লিটার ভিজলে চুন দিন। কক্সিডিওসিস থেকে সাবধান।';
         } else {
-          advice = '🌤️ সুন্দর আবহাওয়া ($temp°C, আর্দ্রতা $hum%)। নিয়মিত খাদ্য ও পরিষ্কার পানি দিন।';
+          advice = '🌤️ অনুকুল আবহাওয়া ($temp°C, আর্দ্রতা $hum%)। নিয়মমাফিক খাবার ও পানি দিন।';
         }
 
         setState(() {
@@ -371,7 +367,6 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0.5,
         title: Row(
           children: [
-            // Display uploaded Logo if available, otherwise icon fallback
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Image.asset(
@@ -394,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('স্মার্ট খামারি', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AgroTheme.darkCharcoal)),
-                Text('A Product of Engineer\'s Agro', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AgroTheme.primaryGreen.withOpacity(0.85))),
+                Text('A Product of Engineer\'s Agro', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AgroTheme.primaryGreen)),
               ],
             ),
           ],
@@ -402,7 +397,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: Column(
         children: [
-          // Live Weather Advisory Card
           Container(
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
             padding: const EdgeInsets.all(14),
@@ -454,8 +448,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-
-          // Sheds List Header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
             child: Row(
@@ -466,8 +458,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-
-          // Sheds List
           Expanded(
             child: sheds.isEmpty
                 ? Center(
@@ -530,8 +520,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
           ),
-
-          // Footer Credit
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 10),
@@ -558,7 +546,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// Shed Details Screen
 class ShedDetailsScreen extends StatefulWidget {
   final Shed shed;
   final VoidCallback onUpdate;
@@ -779,7 +766,6 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
       body: TabBarView(
         controller: _tabCtrl,
         children: [
-          // Tab 1: Daily Logs
           Column(
             children: [
               if (todayVaccines.isNotEmpty && !widget.shed.isClosed)
@@ -834,8 +820,6 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
               ),
             ],
           ),
-
-          // Tab 2: Vaccine Schedule
           ListView.builder(
             padding: const EdgeInsets.all(16),
             itemCount: schedules.length,
@@ -865,8 +849,6 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
               );
             },
           ),
-
-          // Tab 3: Summary & Analytics
           SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(

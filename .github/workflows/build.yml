@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Java Setup
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -24,11 +24,23 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Generate Android Skeleton Files
+      - name: Prepare Android Platform
         run: |
-          cp lib/main.dart lib/main_temp.dart
-          flutter create . --platforms=android --org com.poultry.manager
-          mv lib/main_temp.dart lib/main.dart
+          mkdir -p lib
+          # যদি ভুলবশত main.dart বাইরে থাকে, তবে তা lib ফোল্ডারে নিয়ে আসবে
+          if [ -f main.dart ]; then
+            mv main.dart lib/main.dart
+          fi
+          # main.dart ব্যাকআপ নেওয়া
+          if [ -f lib/main.dart ]; then
+            cp lib/main.dart lib/main_temp.dart
+          fi
+          # হাইফেন সমস্যা সমাধান করে অ্যান্ড্রয়েড ফাইল তৈরি করা
+          flutter create . --project-name poultry_manager --platforms=android --org com.poultry.manager
+          # মূল কোড ফিরিয়ে আনা
+          if [ -f lib/main_temp.dart ]; then
+            mv lib/main_temp.dart lib/main.dart
+          fi
 
       - name: Install Dependencies
         run: flutter pub get

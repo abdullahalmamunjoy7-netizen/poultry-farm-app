@@ -24,28 +24,43 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Prepare Assets & Platform
+      - name: Setup Android Platform Safely
         run: |
           mkdir -p lib assets
-          # যদি লোগো মূল ফোল্ডারে থাকে, assets এ নিয়ে যাওয়া
-          if [ -f logo.png ]; then
-            mv logo.png assets/logo.png
-          fi
-          if [ -f main.dart ]; then
+          # যদি main.dart বাইরে থাকে, lib-এ নিয়ে আসবে
+          if [ -f main.dart ] && [ ! -f lib/main.dart ]; then
             mv main.dart lib/main.dart
           fi
-          flutter create . --project-name smart_khamari --platforms=android --org com.engineersagro.smartkhamari --no-pub
-          git checkout HEAD -- lib/main.dart || true
-          # মোবাইলে অ্যাপের নাম 'স্মার্ট খামারি' সেট করা
+
+          # আপনার আসল কোড ব্যাকআপ রাখা
+          cp lib/main.dart /tmp/my_real_code.dart
+
+          # একটি অস্থায়ী ফোল্ডারে অ্যান্ড্রয়েড ফাইল তৈরি করা (যাতে বর্তমান কোডে হাত না পড়ে)
+          flutter create temp_app --project-name smart_khamari --platforms=android --org com.engineersagro.smartkhamari
+          
+          # শুধুমাত্র android ফোল্ডারটি প্রজেক্টে নিয়ে আসা
+          rm -rf android
+          cp -r temp_app/android ./android
+          rm -rf temp_app
+
+          # আপনার আসল কোডটি হুবহু আগের জায়গায় ফিরিয়ে দেওয়া
+          cp /tmp/my_real_code.dart lib/main.dart
+
+          # অ্যাপের নাম 'স্মার্ট খামারি' সেট করা
           sed -i 's/android:label=".*"/android:label="স্মার্ট খামারি"/g' android/app/src/main/AndroidManifest.xml
+
+          echo "=== lib/main.dart কোড চেক ==="
+          head -n 25 lib/main.dart
+          echo "=============================="
 
       - name: Install Dependencies
         run: flutter pub get
 
-      - name: Generate App Icon from Logo
+      - name: Generate App Icon
         run: |
-          if [ -f assets/logo.png ]; then
-            dart run flutter_launcher_icons
+          if [ -f assets/logo.png ] || [ -f logo.png ]; then
+            if [ -f logo.png ]; then mv logo.png assets/logo.png; fi
+            dart run flutter_launcher_icons || true
           fi
 
       - name: Build Debug APK

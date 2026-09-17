@@ -2,30 +2,83 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(const PoultryApp());
+  runApp(const SmartKhamariApp());
 }
 
-class PoultryApp extends StatelessWidget {
-  const PoultryApp({super.key});
+// Brand Color Palette extracted from Logo
+class AgroTheme {
+  static const Color primaryGreen = Color(0xFF186337);    // লোগোর মূল গাঢ় সবুজ
+  static const Color accentGreen = Color(0xFF76AB33);     // লোগোর লাইম গ্রিন
+  static const Color darkCharcoal = Color(0xFF1E221E);    // লোগোর গিয়ার ও টেক্সট
+  static const Color background = Color(0xFFF7F9F6);      // সফট অফ-হোয়াইট
+  static const Color cardSurface = Colors.white;
+  static const Color subtleBorder = Color(0xFFE2E8E0);
+}
+
+class SmartKhamariApp extends StatelessWidget {
+  const SmartKhamariApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'খামারি হিসাব',
+      title: 'স্মার্ট খামারি - Engineer\'s Agro',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.teal,
+        scaffoldBackgroundColor: AgroTheme.background,
         useMaterial3: true,
         fontFamily: 'Roboto',
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AgroTheme.primaryGreen,
+          primary: AgroTheme.primaryGreen,
+          secondary: AgroTheme.accentGreen,
+        ),
       ),
       home: const HomeScreen(),
     );
   }
 }
 
-// Model: Shed/Batch
+// Vaccine Model
+class VaccineInfo {
+  final int day;
+  final String name;
+  final String route;
+  final String note;
+  VaccineInfo({required this.day, required this.name, required this.route, required this.note});
+}
+
+List<VaccineInfo> getVaccineSchedule(String birdType) {
+  if (birdType == 'ব্রয়লার মুরগী') {
+    return [
+      VaccineInfo(day: 4, name: 'BCRDV (রাণীক্ষেত)', route: 'চোখে ড্রপ', note: '১ ফোঁটা করে চোখের কোনায় দিন'),
+      VaccineInfo(day: 10, name: 'গামবোরো (১ম ডোজ)', route: 'পানি / চোখ', note: 'সকালের ঠাণ্ডা পানিতে মিশিয়ে দিন'),
+      VaccineInfo(day: 18, name: 'গামবোরো (বুস্টার)', route: 'খাবার পানি', note: 'পানিতে হালকা গুঁড়াদুধ মেশাতে পারেন'),
+      VaccineInfo(day: 22, name: 'BCRDV (বুস্টার)', route: 'চোখ / পানি', note: 'রাণীক্ষেত চূড়ান্ত প্রতিরোধে'),
+    ];
+  } else if (birdType.contains('হাঁস')) {
+    return [
+      VaccineInfo(day: 18, name: 'ডাক প্লেগ (১ম ডোজ)', route: 'চামড়ার নিচে', note: 'ঘাড়ের চামড়ার নিচে ১ মিলি'),
+      VaccineInfo(day: 35, name: 'ডাক প্লেগ (বুস্টার)', route: 'বুকের মাংসে', note: 'বুকের মাংসে ১ মিলি'),
+      VaccineInfo(day: 50, name: 'ডাক কলেরা (১ম ডোজ)', route: 'বুকের মাংসে', note: '১ মিলি করে ইনজেকশন'),
+      VaccineInfo(day: 75, name: 'ডাক কলেরা (বুস্টার)', route: 'বুকের মাংসে', note: 'পূর্ণ প্রতিরোধ ক্ষমতার জন্য'),
+    ];
+  } else {
+    return [
+      VaccineInfo(day: 4, name: 'BCRDV (রাণীক্ষেত)', route: 'চোখে ড্রপ', note: 'চোখে ১ ফোঁটা'),
+      VaccineInfo(day: 10, name: 'গামবোরো', route: 'চোখে ড্রপ / পানি', note: 'সকালে ঠাণ্ডা পানিতে'),
+      VaccineInfo(day: 18, name: 'গামবোরো বুস্টার', route: 'পানি', note: 'বুস্টার ডোজ'),
+      VaccineInfo(day: 24, name: 'BCRDV বুস্টার', route: 'চোখ / পানি', note: 'রাণীক্ষেত প্রতিরোধে'),
+      VaccineInfo(day: 35, name: 'ফাউল পক্স (বসন্ত)', route: 'ডানার পর্দায়', note: 'ডানার চামড়ায় সুই ফুটিয়ে দিন'),
+      VaccineInfo(day: 60, name: 'RDV (বড় রাণীক্ষেত)', route: 'মাংসে ইনজেকশন', note: 'বুকের মাংসে ০.৫ মিলি'),
+      VaccineInfo(day: 75, name: 'ফাউল কলেরা', route: 'মাংসে ইনজেকশন', note: 'বুকের মাংসে ১ মিলি'),
+    ];
+  }
+}
+
+// Models
 class Shed {
   String id;
   String name;
@@ -34,7 +87,6 @@ class Shed {
   double chickPrice;
   DateTime startDate;
   bool isClosed;
-  // Sale details
   double soldWeight;
   double saleRate;
   int soldBirds;
@@ -79,7 +131,6 @@ class Shed {
   );
 }
 
-// Model: Daily Entry
 class DailyLog {
   String id;
   String shedId;
@@ -132,7 +183,7 @@ class DailyLog {
   );
 }
 
-// Home Screen: শেডের তালিকা
+// Home Screen
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -142,11 +193,62 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Shed> sheds = [];
+  double? currentTemp;
+  int? currentHumidity;
+  String weatherAdvice = 'আবহাওয়া বিশ্লেষণ করা হচ্ছে...';
+  String selectedCity = 'ঢাকা';
+
+  final Map<String, List<double>> cities = {
+    'ঢাকা': [23.8103, 90.4125],
+    'চট্টগ্রাম': [22.3569, 91.7832],
+    'রাজশাহী': [24.3636, 88.6241],
+    'রংপুর': [25.7439, 89.2752],
+    'খুলনা': [22.8456, 89.5403],
+    'ময়মনসিংহ': [24.7471, 90.4203],
+    'সিলেট': [24.8949, 91.8687],
+    'বরিশাল': [22.7010, 90.3535],
+  };
 
   @override
   void initState() {
     super.initState();
     _loadSheds();
+    _fetchWeather();
+  }
+
+  Future<void> _fetchWeather() async {
+    try {
+      final coords = cities[selectedCity] ?? [23.8103, 90.4125];
+      final url = Uri.parse(
+          'https://api.open-meteo.com/v1/forecast?latitude=${coords[0]}&longitude=${coords[1]}&current=temperature_2m,relative_humidity_2m');
+      final res = await http.get(url).timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final temp = (data['current']['temperature_2m'] as num).toDouble();
+        final hum = (data['current']['relative_humidity_2m'] as num).toInt();
+
+        String advice = '';
+        if (temp >= 32) {
+          advice = '🔥 তীব্র গরম ($temp°C)! দুপুর ১২টা-বিকাল ৪টা শক্ত খাবার বন্ধ রাখুন। ঠাণ্ডা পানিতে স্যালাইন/ভিটামিন-সি দিন।';
+        } else if (temp <= 20) {
+          advice = '❄️ ঠাণ্ডা আবহাওয়া ($temp°C)! ব্রুডারে পর্যাপ্ত তাপ দিন ও পর্দা নামিয়ে রাখুন। ভিটামিন AD3E দিতে পারেন।';
+        } else if (hum >= 80) {
+          advice = '🌧️ স্যাঁতসেঁতে আবহাওয়া (আর্দ্রতা $hum%)! লিটার ভিজলে উল্টে চুন দিন। কক্সিডিওসিস থেকে সাবধান থাকুন।';
+        } else {
+          advice = '🌤️ অনুকূল আবহাওয়া ($temp°C, আর্দ্রতা $hum%)। রুটিনমাফিক পুষ্টিকর খাবার ও বিশুদ্ধ পানি দিন।';
+        }
+
+        setState(() {
+          currentTemp = temp;
+          currentHumidity = hum;
+          weatherAdvice = advice;
+        });
+      }
+    } catch (_) {
+      setState(() {
+        weatherAdvice = 'অফলাইন মোড: নিয়মিত আলো-বাতাস ও পানির সুব্যবস্থা বজায় রাখুন।';
+      });
+    }
   }
 
   Future<void> _loadSheds() async {
@@ -173,49 +275,90 @@ class _HomeScreenState extends State<HomeScreen> {
     String selectedType = 'ব্রয়লার মুরগী';
     final types = ['ব্রয়লার মুরগী', 'সোনালী মুরগী', 'পেকিং হাঁস', 'ডিমের মুরগী (লেয়ার)', 'ডিমের হাঁস'];
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDState) => AlertDialog(
-          title: const Text('নতুন শেড / ব্যাচ যোগ করুন'),
-          content: SingleChildScrollView(
+        builder: (ctx, setDState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20, right: 20, top: 24,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'শেডের নাম/নম্বর (যেমন: শেড-১)')),
-                const SizedBox(height: 10),
+                const Text('নতুন শেড বা ব্যাচ শুরু করুন', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AgroTheme.primaryGreen)),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(
+                    labelText: 'শেডের নাম / ব্যাচ নম্বর (যেমন: শেড-০১)',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   value: selectedType,
                   items: types.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
                   onChanged: (val) => setDState(() => selectedType = val!),
-                  decoration: const InputDecoration(labelText: 'পাখির ধরন'),
+                  decoration: InputDecoration(
+                    labelText: 'পাখির জাত / ধরণ',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
-                TextField(controller: chickCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'বাচ্চার সংখ্যা')),
-                TextField(controller: priceCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'প্রতি বাচ্চার দর (টাকা)')),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: chickCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'বাচ্চার সংখ্যা (টি)',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: priceCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'প্রতি বাচ্চার ক্রয়মূল্য (টাকা)',
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AgroTheme.primaryGreen,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      if (nameCtrl.text.isNotEmpty && chickCtrl.text.isNotEmpty) {
+                        final newShed = Shed(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          name: nameCtrl.text,
+                          birdType: selectedType,
+                          chickCount: int.tryParse(chickCtrl.text) ?? 0,
+                          chickPrice: double.tryParse(priceCtrl.text) ?? 0,
+                          startDate: DateTime.now(),
+                        );
+                        setState(() => sheds.add(newShed));
+                        _saveSheds();
+                        Navigator.pop(ctx);
+                      }
+                    },
+                    child: const Text('ব্যাচ তৈরি করুন', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ),
               ],
             ),
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('বাতিল')),
-            ElevatedButton(
-              onPressed: () {
-                if (nameCtrl.text.isNotEmpty && chickCtrl.text.isNotEmpty) {
-                  final newShed = Shed(
-                    id: DateTime.now().millisecondsSinceEpoch.toString(),
-                    name: nameCtrl.text,
-                    birdType: selectedType,
-                    chickCount: int.tryParse(chickCtrl.text) ?? 0,
-                    chickPrice: double.tryParse(priceCtrl.text) ?? 0,
-                    startDate: DateTime.now(),
-                  );
-                  setState(() => sheds.add(newShed));
-                  _saveSheds();
-                  Navigator.pop(ctx);
-                }
-              },
-              child: const Text('তৈরি করুন'),
-            ),
-          ],
         ),
       ),
     );
@@ -225,57 +368,198 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('🐔 খামারি হিসাব ও ড্যাশবোর্ড'),
-        backgroundColor: Colors.teal,
-        foregroundColor: Colors.white,
+        backgroundColor: AgroTheme.primaryGreen,
+        elevation: 0,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('স্মার্ট খামারি', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.white)),
+            Text('A Product of Engineer\'s Agro', style: TextStyle(fontSize: 11, color: AgroTheme.accentGreen.withOpacity(0.9))),
+          ],
+        ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.verified, color: AgroTheme.accentGreen, size: 16),
+                SizedBox(width: 4),
+                Text('অফলাইন মোড', style: TextStyle(color: Colors.white, fontSize: 11)),
+              ],
+            ),
+          ),
+        ],
       ),
-      body: sheds.isEmpty
-          ? const Center(
-              child: Text(
-                'কোনো শেড যুক্ত করা নেই!\nনিচের (+) বাটনে চাপ দিয়ে নতুন শেড খুলুন।',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            )
-          : ListView.builder(
-              itemCount: sheds.length,
-              itemBuilder: (ctx, i) {
-                final s = sheds[i];
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  elevation: 3,
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: s.isClosed ? Colors.grey : Colors.teal,
-                      child: Icon(s.isClosed ? Icons.done_all : Icons.pets, color: Colors.white),
+      body: Column(
+        children: [
+          // Live Weather Card
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AgroTheme.subtleBorder),
+              boxShadow: [
+                BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 3)),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(color: AgroTheme.accentGreen.withOpacity(0.15), shape: BoxShape.circle),
+                          child: const Icon(Icons.wb_sunny_outlined, color: AgroTheme.primaryGreen, size: 18),
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('লাইভ আবহাওয়া পরামর্শ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AgroTheme.darkCharcoal)),
+                      ],
                     ),
-                    title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-                    subtitle: Text('${s.birdType} | বাচ্চা: ${s.chickCount} টি\nশুরু: ${DateFormat('dd MMM yyyy').format(s.startDate)}'),
-                    isThreeLine: true,
-                    trailing: s.isClosed
-                        ? const Chip(label: Text('সম্পন্ন', style: TextStyle(color: Colors.white)), backgroundColor: Colors.grey)
-                        : const Chip(label: Text('চলমান', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => ShedDetailsScreen(shed: s, onUpdate: _saveSheds)),
-                      ).then((_) => setState(() {}));
+                    DropdownButton<String>(
+                      value: selectedCity,
+                      underline: const SizedBox(),
+                      icon: const Icon(Icons.keyboard_arrow_down, size: 18, color: AgroTheme.primaryGreen),
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: AgroTheme.primaryGreen, fontSize: 13),
+                      items: cities.keys.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => selectedCity = val);
+                          _fetchWeather();
+                        }
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  weatherAdvice,
+                  style: const TextStyle(fontSize: 13, color: Colors.black88, height: 1.35),
+                ),
+              ],
+            ),
+          ),
+
+          // Sheds List Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('আমার খামার শেডসমূহ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AgroTheme.darkCharcoal)),
+                Text('${sheds.length} টি ব্যাচ', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+              ],
+            ),
+          ),
+
+          // List of Sheds
+          Expanded(
+            child: sheds.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.pets, size: 48, color: Colors.grey.shade400),
+                        const SizedBox(height: 10),
+                        const Text('কোনো শেড যুক্ত করা নেই!', style: TextStyle(color: Colors.black54, fontSize: 15, fontWeight: FontWeight.w500)),
+                        const SizedBox(height: 4),
+                        const Text('নিচের বাটনে চাপ দিয়ে নতুন ব্যাচের হিসাব শুরু করুন', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    itemCount: sheds.length,
+                    itemBuilder: (ctx, i) {
+                      final s = sheds[i];
+                      final age = DateTime.now().difference(s.startDate).inDays + 1;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AgroTheme.subtleBorder),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 6, offset: const Offset(0, 2)),
+                          ],
+                        ),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          leading: CircleAvatar(
+                            radius: 24,
+                            backgroundColor: s.isClosed ? Colors.grey.shade300 : AgroTheme.primaryGreen.withOpacity(0.12),
+                            child: Icon(s.isClosed ? Icons.check : Icons.egg_outlined, color: s.isClosed ? Colors.grey : AgroTheme.primaryGreen),
+                          ),
+                          title: Text(s.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AgroTheme.darkCharcoal)),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 4),
+                              Text('${s.birdType}  •  বাচ্চা: ${s.chickCount} টি', style: TextStyle(color: Colors.grey.shade700, fontSize: 13)),
+                              const SizedBox(height: 2),
+                              Text(
+                                s.isClosed ? 'ব্যাচ সমাপ্ত' : 'বর্তমান বয়স: $age দিন',
+                                style: TextStyle(color: s.isClosed ? Colors.grey : AgroTheme.accentGreen, fontWeight: FontWeight.w600, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => ShedDetailsScreen(shed: s, onUpdate: _saveSheds)),
+                            ).then((_) => setState(() {}));
+                          },
+                        ),
+                      );
                     },
                   ),
-                );
-              },
+          ),
+
+          // Developer Credit Badge at Bottom
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: AgroTheme.subtleBorder)),
             ),
+            child: Column(
+              children: [
+                const Text(
+                  'Developed by Abdullah Al Mamun',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AgroTheme.darkCharcoal),
+                ),
+                Text(
+                  'A Product of Engineer\'s Agro',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AgroTheme.primaryGreen.withOpacity(0.9)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addShedDialog,
-        backgroundColor: Colors.teal,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('নতুন শেড', style: TextStyle(color: Colors.white)),
+        backgroundColor: AgroTheme.primaryGreen,
+        icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+        label: const Text('নতুন ব্যাচ', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ),
     );
   }
 }
 
-// Shed Details & Daily Entry Screen
+// Shed Details Screen
 class ShedDetailsScreen extends StatefulWidget {
   final Shed shed;
   final VoidCallback onUpdate;
@@ -292,7 +576,7 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 2, vsync: this);
+    _tabCtrl = TabController(length: 3, vsync: this);
     _loadLogs();
   }
 
@@ -323,18 +607,25 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
     final otherCostCtrl = TextEditingController();
     final noteCtrl = TextEditingController();
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDState) => AlertDialog(
-          title: const Text('দৈনিক হিসাব যুক্ত করুন'),
-          content: SingleChildScrollView(
+        builder: (ctx, setDState) => Padding(
+          padding: EdgeInsets.only(
+            left: 20, right: 20, top: 20,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + 20,
+          ),
+          child: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ListTile(
-                  title: Text('তারিখ: ${DateFormat('dd MMM yyyy').format(selectedDate)}'),
-                  trailing: const Icon(Icons.calendar_month),
+                const Text('আজকের দৈনিক হিসাব এন্ট্রি', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AgroTheme.primaryGreen)),
+                const SizedBox(height: 12),
+                InkWell(
                   onTap: () async {
                     final d = await showDatePicker(
                       context: context,
@@ -344,69 +635,93 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
                     );
                     if (d != null) setDState(() => selectedDate = d);
                   },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(border: Border.all(color: AgroTheme.subtleBorder), borderRadius: BorderRadius.circular(12)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('তারিখ: ${DateFormat('dd MMMM yyyy').format(selectedDate)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                        const Icon(Icons.calendar_today_outlined, size: 18, color: AgroTheme.primaryGreen),
+                      ],
+                    ),
+                  ),
                 ),
-                TextField(controller: deadCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'মারা গেছে (সংখ্যা)')),
-                TextField(controller: feedKgCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'খাবার খাওয়া হয়েছে (কেজি)')),
-                TextField(controller: feedCostCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'খাবারের খরচ (টাকা)')),
-                TextField(controller: medCostCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ঔষধ/ভ্যাকসিন খরচ (টাকা)')),
-                if (widget.shed.birdType.contains('ডিম'))
-                  TextField(controller: eggsCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'ডিম সংগ্রহ (টি)')),
-                TextField(controller: otherCostCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'অন্যান্য খরচ (বিদ্যুৎ, তুষ ইত্যাদি)')),
-                TextField(controller: noteCtrl, decoration: const InputDecoration(labelText: 'খরচের বিবরণ/নোট')),
+                const SizedBox(height: 10),
+                TextField(controller: deadCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'মারা গেছে (টি)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
+                const SizedBox(height: 10),
+                TextField(controller: feedKgCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'খাবার খাওয়া হয়েছে (কেজি)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
+                const SizedBox(height: 10),
+                TextField(controller: feedCostCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'খাবারের মোট দাম (টাকা)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
+                const SizedBox(height: 10),
+                TextField(controller: medCostCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'ঔষধ / ভ্যাকসিন খরচ (টাকা)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
+                if (widget.shed.birdType.contains('ডিম')) ...[
+                  const SizedBox(height: 10),
+                  TextField(controller: eggsCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'ডিম সংগ্রহ (টি)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
+                ],
+                const SizedBox(height: 10),
+                TextField(controller: otherCostCtrl, keyboardType: TextInputType.number, decoration: InputDecoration(labelText: 'অন্যান্য খরচ (বিদ্যুৎ, তুষ ইত্যাদি)', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
+                const SizedBox(height: 10),
+                TextField(controller: noteCtrl, decoration: InputDecoration(labelText: 'খরচের নোট / বিবরণ', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
+                const SizedBox(height: 18),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: AgroTheme.primaryGreen, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    onPressed: () {
+                      final log = DailyLog(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        shedId: widget.shed.id,
+                        date: selectedDate,
+                        mortality: int.tryParse(deadCtrl.text) ?? 0,
+                        feedKg: double.tryParse(feedKgCtrl.text) ?? 0,
+                        feedCost: double.tryParse(feedCostCtrl.text) ?? 0,
+                        medicineCost: double.tryParse(medCostCtrl.text) ?? 0,
+                        eggs: int.tryParse(eggsCtrl.text) ?? 0,
+                        otherCost: double.tryParse(otherCostCtrl.text) ?? 0,
+                        note: noteCtrl.text,
+                      );
+                      setState(() => logs.insert(0, log));
+                      _saveLogs();
+                      Navigator.pop(ctx);
+                    },
+                    child: const Text('হিসাব সংরক্ষণ করুন', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ),
+                ),
               ],
             ),
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('বাতিল')),
-            ElevatedButton(
-              onPressed: () {
-                final log = DailyLog(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  shedId: widget.shed.id,
-                  date: selectedDate,
-                  mortality: int.tryParse(deadCtrl.text) ?? 0,
-                  feedKg: double.tryParse(feedKgCtrl.text) ?? 0,
-                  feedCost: double.tryParse(feedCostCtrl.text) ?? 0,
-                  medicineCost: double.tryParse(medCostCtrl.text) ?? 0,
-                  eggs: int.tryParse(eggsCtrl.text) ?? 0,
-                  otherCost: double.tryParse(otherCostCtrl.text) ?? 0,
-                  note: noteCtrl.text,
-                );
-                setState(() => logs.insert(0, log));
-                _saveLogs();
-                Navigator.pop(ctx);
-              },
-              child: const Text('সংরক্ষণ করুন'),
-            ),
-          ],
         ),
       ),
     );
   }
 
   void _closeShedDialog() {
-    final soldBirdsCtrl = TextEditingController();
     final weightCtrl = TextEditingController();
     final rateCtrl = TextEditingController();
+    final birdsCtrl = TextEditingController();
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('ব্যাচ সমাপ্তি ও বিক্রির হিসাব'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Text('ব্যাচ বিক্রির চূড়ান্ত হিসাব', style: TextStyle(color: AgroTheme.primaryGreen, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: soldBirdsCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'বিক্রিত মোট পাখি (টি)')),
-            TextField(controller: weightCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'মোট বিক্রিত ওজন (কেজি)')),
-            TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'প্রতি কেজি বিক্রয়মূল্য (টাকা)')),
+            TextField(controller: birdsCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'মোট জীবিত বিক্রি (টি)')),
+            TextField(controller: weightCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'মোট ওজন (কেজি)')),
+            TextField(controller: rateCtrl, keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: 'প্রতি কেজি দর (টাকা)')),
           ],
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('বাতিল')),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AgroTheme.primaryGreen, foregroundColor: Colors.white),
             onPressed: () {
               setState(() {
-                widget.shed.soldBirds = int.tryParse(soldBirdsCtrl.text) ?? 0;
+                widget.shed.soldBirds = int.tryParse(birdsCtrl.text) ?? 0;
                 widget.shed.soldWeight = double.tryParse(weightCtrl.text) ?? 0;
                 widget.shed.saleRate = double.tryParse(rateCtrl.text) ?? 0;
                 widget.shed.isClosed = true;
@@ -414,7 +729,7 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
               widget.onUpdate();
               Navigator.pop(ctx);
             },
-            child: const Text('হিসাব সম্পন্ন করুন'),
+            child: const Text('হিসাব চূড়ান্ত করুন'),
           ),
         ],
       ),
@@ -423,134 +738,198 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
-    // Calculators
+    final currentAge = DateTime.now().difference(widget.shed.startDate).inDays + 1;
+    final schedules = getVaccineSchedule(widget.shed.birdType);
+    final todayVaccines = schedules.where((v) => (v.day - currentAge).abs() <= 1).toList();
+
+    // Calculations
     final totalDead = logs.fold<int>(0, (sum, item) => sum + item.mortality);
     final totalFeedKg = logs.fold<double>(0, (sum, item) => sum + item.feedKg);
     final totalFeedCost = logs.fold<double>(0, (sum, item) => sum + item.feedCost);
     final totalMedCost = logs.fold<double>(0, (sum, item) => sum + item.medicineCost);
     final totalOtherCost = logs.fold<double>(0, (sum, item) => sum + item.otherCost);
-    final totalEggs = logs.fold<int>(0, (sum, item) => sum + item.eggs);
-
-    final chickCost = widget.shed.chickCount * widget.shed.chickPrice;
-    final totalExpense = chickCost + totalFeedCost + totalMedCost + totalOtherCost;
+    final totalExpense = (widget.shed.chickCount * widget.shed.chickPrice) + totalFeedCost + totalMedCost + totalOtherCost;
     final totalRevenue = widget.shed.soldWeight * widget.shed.saleRate;
     final profitOrLoss = totalRevenue - totalExpense;
-
     final double fcr = widget.shed.soldWeight > 0 ? (totalFeedKg / widget.shed.soldWeight) : 0;
     final double mortalityRate = widget.shed.chickCount > 0 ? (totalDead / widget.shed.chickCount) * 100 : 0;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.shed.name),
-        backgroundColor: Colors.teal,
+        backgroundColor: AgroTheme.primaryGreen,
         foregroundColor: Colors.white,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.shed.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            Text('${widget.shed.birdType}  |  বয়স: $currentAge দিন', style: const TextStyle(fontSize: 12, color: Colors.white70)),
+          ],
+        ),
         bottom: TabBar(
           controller: _tabCtrl,
-          indicatorColor: Colors.amber,
+          indicatorColor: AgroTheme.accentGreen,
+          indicatorWeight: 3,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
           tabs: const [
-            Tab(icon: Icon(Icons.calendar_today), text: 'দৈনিক এন্ট্রি'),
-            Tab(icon: Icon(Icons.analytics), text: 'রিপোর্ট ও বিশ্লেষণ'),
+            Tab(text: 'দৈনিক এন্ট্রি'),
+            Tab(text: 'ভ্যাকসিন চার্ট'),
+            Tab(text: 'লাভ ও রিপোর্ট'),
           ],
         ),
       ),
       body: TabBarView(
         controller: _tabCtrl,
         children: [
-          // Tab 1: Logs List
-          logs.isEmpty
-              ? const Center(child: Text('এখনও কোনো দৈনিক হিসাব দেওয়া হয়নি।'))
-              : ListView.builder(
-                  itemCount: logs.length,
-                  itemBuilder: (ctx, i) {
-                    final item = logs[i];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      child: ListTile(
-                        title: Text(DateFormat('dd MMMM yyyy').format(item.date), style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('মারা গেছে: ${item.mortality} টি | ফিড: ${item.feedKg} কেজি\nদৈনিক খরচ: ৳${item.feedCost + item.medicineCost + item.otherCost}'),
-                        trailing: item.note.isNotEmpty ? Tooltip(message: item.note, child: const Icon(Icons.info_outline, color: Colors.teal)) : null,
+          // Tab 1: Daily Logs
+          Column(
+            children: [
+              if (todayVaccines.isNotEmpty && !widget.shed.isClosed)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF3E0),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.orange.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.notifications_active, color: Colors.orange, size: 24),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('জরুরি ভ্যাকসিন এলার্ট!', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
+                            ...todayVaccines.map((v) => Text('• ${v.name} (${v.route}) - ${v.note}', style: const TextStyle(fontSize: 12))),
+                          ],
+                        ),
                       ),
-                    );
-                  },
+                    ],
+                  ),
                 ),
+              Expanded(
+                child: logs.isEmpty
+                    ? const Center(child: Text('এখনও কোনো হিসাব দেওয়া হয়নি। নিচে (+) চাপুন।'))
+                    : ListView.builder(
+                        padding: const EdgeInsets.all(12),
+                        itemCount: logs.length,
+                        itemBuilder: (ctx, i) {
+                          final item = logs[i];
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AgroTheme.subtleBorder),
+                            ),
+                            child: ListTile(
+                              title: Text(DateFormat('dd MMMM yyyy').format(item.date), style: const TextStyle(fontWeight: FontWeight.bold)),
+                              subtitle: Text('মারা গেছে: ${item.mortality} টি  |  ফিড: ${item.feedKg} কেজি\nমোট খরচ: ৳${item.feedCost + item.medicineCost + item.otherCost}'),
+                              trailing: item.note.isNotEmpty ? Tooltip(message: item.note, child: const Icon(Icons.info_outline, color: AgroTheme.primaryGreen)) : null,
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
 
-          // Tab 2: Full Analytics & Feedback
+          // Tab 2: Vaccine Schedule
+          ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: schedules.length,
+            itemBuilder: (ctx, i) {
+              final v = schedules[i];
+              final isPassed = currentAge > v.day;
+              final isToday = currentAge == v.day;
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: isToday ? AgroTheme.accentGreen.withOpacity(0.12) : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: isToday ? AgroTheme.accentGreen : AgroTheme.subtleBorder),
+                ),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: isToday ? AgroTheme.accentGreen : (isPassed ? Colors.grey : AgroTheme.primaryGreen),
+                    child: Text('${v.day}d', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                  ),
+                  title: Text(v.name, style: TextStyle(fontWeight: FontWeight.bold, color: isPassed ? Colors.grey : AgroTheme.darkCharcoal)),
+                  subtitle: Text('নিয়ম: ${v.route}\nপরামর্শ: ${v.note}'),
+                  trailing: isPassed
+                      ? const Icon(Icons.check_circle, color: AgroTheme.accentGreen)
+                      : (isToday ? const Chip(label: Text('আজকে দিন', style: TextStyle(color: Colors.white, fontSize: 11)), backgroundColor: AgroTheme.accentGreen) : null),
+                ),
+              );
+            },
+          ),
+
+          // Tab 3: Summary & Analytics
           SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
-                  color: Colors.teal.shade50,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('📊 সামগ্রিক পরিস্থিতি', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.teal)),
-                        const Divider(),
-                        Text('মোট বাচ্চা: ${widget.shed.chickCount} টি'),
-                        Text('মোট মারা গেছে: $totalDead টি (${mortalityRate.toStringAsFixed(1)}%)'),
-                        Text('মোট খাদ্য খেয়েছে: ${totalFeedKg.toStringAsFixed(1)} কেজি'),
-                        if (widget.shed.birdType.contains('ডিম')) Text('মোট সংগৃহীত ডিম: $totalEggs টি'),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: AgroTheme.subtleBorder)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('📊 সামগ্রিক ব্যাচ পারফর্মেন্স', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AgroTheme.primaryGreen)),
+                      const Divider(height: 24),
+                      _buildDataRow('মোট বাচ্চা তোলা:', '${widget.shed.chickCount} টি'),
+                      _buildDataRow('মোট মৃত্যু (Mortality):', '$totalDead টি (${mortalityRate.toStringAsFixed(1)}%)'),
+                      _buildDataRow('মোট ফিড খাওয়া হয়েছে:', '${totalFeedKg.toStringAsFixed(1)} কেজি'),
+                      _buildDataRow('মোট খরচ হয়েছে:', '৳ ${totalExpense.toStringAsFixed(0)}'),
+                      if (widget.shed.isClosed) ...[
+                        const Divider(height: 20),
+                        _buildDataRow('মোট বিক্রয়মূল্য:', '৳ ${totalRevenue.toStringAsFixed(0)}'),
+                        _buildDataRow('FCR অনুপাত:', fcr.toStringAsFixed(2)),
                         const SizedBox(height: 8),
-                        Text('মোট খরচ: ৳${totalExpense.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        if (widget.shed.isClosed) ...[
-                          Text('মোট বিক্রি: ৳${totalRevenue.toStringAsFixed(0)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue)),
-                          Text(
-                            profitOrLoss >= 0 ? 'নীট লাভ: ৳${profitOrLoss.toStringAsFixed(0)}' : 'ক্ষতি: ৳${profitOrLoss.abs().toStringAsFixed(0)}',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: profitOrLoss >= 0 ? Colors.green : Colors.red),
-                          ),
-                          Text('FCR (ফিড কনভার্শন রেট): ${fcr.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Smart Feedback Box
-                Card(
-                  color: Colors.amber.shade50,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(Icons.lightbulb, color: Colors.amber),
-                            SizedBox(width: 8),
-                            Text('💡 স্মার্ট পরামর্শ ও বিশ্লেষণ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            const Text('নীট ফলাফল:', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                            Text(
+                              profitOrLoss >= 0 ? '৳ ${profitOrLoss.toStringAsFixed(0)} (লাভ)' : '৳ ${profitOrLoss.abs().toStringAsFixed(0)} (ক্ষতি)',
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: profitOrLoss >= 0 ? AgroTheme.primaryGreen : Colors.red),
+                            ),
                           ],
                         ),
-                        const Divider(),
-                        if (!widget.shed.isClosed)
-                          const Text('ব্যাচটি এখনো চলমান রয়েছে। ব্যাচ বিক্রি সম্পন্ন করে নিচের "ব্যাচ শেষ ও বিক্রি হিসাব" বাটনে চাপুন।')
-                        else ...[
-                          if (fcr > 1.65)
-                            const Text('⚠️ FCR বেশি এসেছে! এর মানে খাবারের তুলনায় ওজন কম হয়েছে। খাবার ছিটকে পড়া বন্ধ করুন বা ফিডের মান পরিবর্তন করুন।')
-                          else if (fcr > 0)
-                            const Text('✅ অসাধারণ FCR! আপনি খুবই দক্ষতার সাথে খাবারের ব্যবহার নিয়ন্ত্রণ করেছেন।'),
-                          const SizedBox(height: 6),
-                          if (mortalityRate > 5)
-                            const Text('⚠️ বাচ্চার মৃত্যুর হার ৫% এর বেশি! খামারের বায়োসিকিউরিটি ও লিটার ব্যবস্থাপনা আরো জোরদার করা প্রয়োজন।')
-                          else
-                            const Text('✅ বাচ্চার মৃত্যুর হার স্বাভাবিক মাত্রার মধ্যে ছিল।'),
-                        ],
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                if (widget.shed.isClosed)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(color: AgroTheme.accentGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(14), border: Border.all(color: AgroTheme.accentGreen)),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('💡 ইঞ্জিনিয়ার্স এগ্রো ফিডব্যাক:', style: TextStyle(fontWeight: FontWeight.bold, color: AgroTheme.primaryGreen)),
+                        const SizedBox(height: 4),
+                        Text(fcr > 1.65 ? '• FCR কিছুটা বেশি। পরবর্তী ব্যাচে খাবারের অপচয় হ্রাস করার চেষ্টা করুন।' : '• দারুণ এফসিআর অর্জিত হয়েছে! আপনার খাদ্য ব্যবস্থাপনা চমৎকার ছিল।'),
+                        Text(mortalityRate > 5 ? '• মৃত্যুর হার ৫% এর বেশি ছিল। বায়োসিকিউরিটি ও লিটার ব্যবস্থাপনা বাড়ান।' : '• বাচ্চার মৃত্যুর হার নিয়ন্ত্রণে ছিল।'),
                       ],
                     ),
                   ),
-                ),
                 const SizedBox(height: 20),
-
                 if (!widget.shed.isClosed)
-                  Center(
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
                     child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.deepOrange, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+                      style: ElevatedButton.styleFrom(backgroundColor: AgroTheme.primaryGreen, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                       onPressed: _closeShedDialog,
-                      icon: const Icon(Icons.check_circle),
-                      label: const Text('ব্যাচ শেষ ও বিক্রির হিসাব করুন'),
+                      icon: const Icon(Icons.check_circle_outline),
+                      label: const Text('ব্যাচ সম্পন্ন ও বিক্রির হিসাব দিন', style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
               ],
@@ -561,10 +940,23 @@ class _ShedDetailsScreenState extends State<ShedDetailsScreen> with SingleTicker
       floatingActionButton: !widget.shed.isClosed
           ? FloatingActionButton(
               onPressed: _addDailyLogDialog,
-              backgroundColor: Colors.teal,
+              backgroundColor: AgroTheme.primaryGreen,
               child: const Icon(Icons.add, color: Colors.white),
             )
           : null,
+    );
+  }
+
+  Widget _buildDataRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: const TextStyle(color: Colors.black88)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, color: AgroTheme.darkCharcoal)),
+        ],
+      ),
     );
   }
 }
